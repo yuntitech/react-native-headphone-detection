@@ -78,7 +78,10 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
     if (receiver == null) {
       return;
     }
-    getReactApplicationContext().unregisterReceiver(receiver);
+    try {
+        getReactApplicationContext().unregisterReceiver(receiver);
+    } catch (Exception ignore) {
+    }
     receiver = null;
   }
 
