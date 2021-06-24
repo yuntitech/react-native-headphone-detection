@@ -4,6 +4,7 @@ import { NativeModules, NativeEventEmitter, EventSubscription } from 'react-nati
 export interface ConnectedResult {
   audioJack: boolean
   bluetooth: boolean
+  deviceName?:string
 }
 
 const RNHeadphoneDetection = NativeModules.RNHeadphoneDetection;
