@@ -1,6 +1,9 @@
 
 package com.tintef.HeadphoneDetection;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothProfile;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -55,15 +58,21 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
         switch (action) {
           case BluetoothDevice.ACTION_ACL_CONNECTED:
             res.putBoolean("bluetooth", true);
+            RNHeadphoneDetectionModule.this.getBluetoothHeadsetName(new Callback() {
+                @Override
+                public void invoke(Object... args) {
+                    RNHeadphoneDetectionModule.this.addDeviceName(res, args);
+                    sendEvent(reactContext, AUDIO_DEVICE_CHANGED_NOTIFICATION, res);
+                }
+            });
             break;
           case BluetoothDevice.ACTION_ACL_DISCONNECTED:
             res.putBoolean("bluetooth", false);
+            sendEvent(reactContext, AUDIO_DEVICE_CHANGED_NOTIFICATION, res);
             break;
           default:
             break;
         }
-
-        sendEvent(reactContext, AUDIO_DEVICE_CHANGED_NOTIFICATION, res);
       }
     };
 
@@ -120,6 +129,7 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
           device.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
         ) {
           res.put("bluetooth", true);
+          res.put("deviceName", device.getProductName());
         }
       }
     }
@@ -139,7 +149,14 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
 
   @ReactMethod
   public void isAudioDeviceConnected(final Promise promise) {
-      promise.resolve(isAudioDeviceConnected());
+      this.getBluetoothHeadsetName(new Callback() {
+                  @Override
+                  public void invoke(Object... args) {
+                      WritableMap map = isAudioDeviceConnected();
+                      addDeviceName(map, args);
+                      promise.resolve(map);
+                  }
+              });
   }
 
   @Override
@@ -162,5 +179,30 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
   @Override
   public void onHostDestroy() {
     maybeUnregisterReceiver();
+  }
+
+  private void getBluetoothHeadsetName(final Callback callback) {
+      final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+      bluetoothAdapter.getProfileProxy(getReactApplicationContext(), new BluetoothProfile.ServiceListener() {
+          @Override
+          public void onServiceConnected(int profile, BluetoothProfile proxy) {
+              if (proxy.getConnectedDevices().size() > 0) {
+                  callback.invoke(proxy.getConnectedDevices().get(0).getName());
+              } else {
+                  callback.invoke("");
+              }
+          }
+
+          @Override
+          public void onServiceDisconnected(int profile) {
+              callback.invoke("");
+          }
+      }, BluetoothProfile.HEADSET);
+  }
+
+  private void addDeviceName(WritableMap map, Object... args) {
+      if (args.length > 0) {
+          map.putString("deviceName", args[0].toString());
+      }
   }
 }
