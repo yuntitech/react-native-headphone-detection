@@ -168,12 +168,12 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
 
   @Override
   public void onHostResume() {
-    maybeRegisterReceiver();
+//     maybeRegisterReceiver();
   }
 
   @Override
   public void onHostPause() {
-    maybeUnregisterReceiver();
+//     maybeUnregisterReceiver();
   }
 
   @Override
