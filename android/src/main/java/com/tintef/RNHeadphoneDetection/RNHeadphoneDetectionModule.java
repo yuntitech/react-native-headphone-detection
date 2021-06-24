@@ -1,6 +1,7 @@
 
 package com.tintef.HeadphoneDetection;
 
+import com.facebook.react.bridge.Callback;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
@@ -24,8 +25,6 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 
 public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
   private static final String MODULE_NAME = "RNHeadphoneDetection";
@@ -53,7 +52,7 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
       @Override
       public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        WritableMap res = isAudioDeviceConnected();
+        final WritableMap res = isAudioDeviceConnected();
 
         switch (action) {
           case BluetoothDevice.ACTION_ACL_CONNECTED:
@@ -103,7 +102,7 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
   }
 
   private WritableMap isAudioDeviceConnected() {
-    final Map<String, Boolean> res = new HashMap<>();
+    final Map<String, Object> res = new HashMap<>();
     AudioManager audioManager = (AudioManager) getReactApplicationContext().getSystemService(Context.AUDIO_SERVICE);
 
     res.put("audioJack", false);
@@ -135,8 +134,12 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
     }
 
     WritableMap map = new WritableNativeMap();
-    for (Map.Entry<String, Boolean> entry : res.entrySet()) {
-        map.putBoolean(entry.getKey(), entry.getValue());
+    for (Map.Entry<String, Object> entry : res.entrySet()) {
+        if (entry.getValue() instanceof Boolean) {
+            map.putBoolean(entry.getKey(), (Boolean) entry.getValue());
+        } else {
+            map.putString(entry.getKey(), (String) entry.getValue());
+        }
     }
     return map;
   }
