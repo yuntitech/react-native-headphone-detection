@@ -1,10 +1,6 @@
 
 package com.tintef.HeadphoneDetection;
 
-import com.facebook.react.bridge.Callback;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothProfile;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -25,6 +21,8 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 
 public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
   private static final String MODULE_NAME = "RNHeadphoneDetection";
@@ -164,34 +162,5 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
   @Override
   public void onHostDestroy() {
     maybeUnregisterReceiver();
-  }
-
-  private void getBluetoothHeadsetName(final Callback callback) {
-      final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-      if (!bluetoothAdapter.isEnabled()) {
-          callback.invoke("");
-          return;
-      }
-      bluetoothAdapter.getProfileProxy(getReactApplicationContext(), new BluetoothProfile.ServiceListener() {
-          @Override
-          public void onServiceConnected(int profile, BluetoothProfile proxy) {
-              if (proxy.getConnectedDevices().size() > 0) {
-                  callback.invoke(proxy.getConnectedDevices().get(0).getName());
-              } else {
-                  callback.invoke("");
-              }
-          }
-
-          @Override
-          public void onServiceDisconnected(int profile) {
-              callback.invoke("");
-          }
-      }, BluetoothProfile.HEADSET);
-  }
-
-  private void addDeviceName(WritableMap map, Object... args) {
-      if (args.length > 0) {
-          map.putString("deviceName", args[0].toString());
-      }
   }
 }
