@@ -186,6 +186,10 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
 
   private void getBluetoothHeadsetName(final Callback callback) {
       final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+      if (!bluetoothAdapter.isEnabled()) {
+          callback.invoke("");
+          return;
+      }
       bluetoothAdapter.getProfileProxy(getReactApplicationContext(), new BluetoothProfile.ServiceListener() {
           @Override
           public void onServiceConnected(int profile, BluetoothProfile proxy) {
