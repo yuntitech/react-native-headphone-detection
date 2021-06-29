@@ -52,26 +52,20 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
       @Override
       public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        final WritableMap res = isAudioDeviceConnected();
+        WritableMap res = isAudioDeviceConnected();
 
         switch (action) {
           case BluetoothDevice.ACTION_ACL_CONNECTED:
             res.putBoolean("bluetooth", true);
-            RNHeadphoneDetectionModule.this.getBluetoothHeadsetName(new Callback() {
-                @Override
-                public void invoke(Object... args) {
-                    RNHeadphoneDetectionModule.this.addDeviceName(res, args);
-                    sendEvent(reactContext, AUDIO_DEVICE_CHANGED_NOTIFICATION, res);
-                }
-            });
             break;
           case BluetoothDevice.ACTION_ACL_DISCONNECTED:
             res.putBoolean("bluetooth", false);
-            sendEvent(reactContext, AUDIO_DEVICE_CHANGED_NOTIFICATION, res);
             break;
           default:
             break;
         }
+
+        sendEvent(reactContext, AUDIO_DEVICE_CHANGED_NOTIFICATION, res);
       }
     };
 
@@ -102,7 +96,7 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
   }
 
   private WritableMap isAudioDeviceConnected() {
-    final Map<String, Object> res = new HashMap<>();
+    final Map<String, Boolean> res = new HashMap<>();
     AudioManager audioManager = (AudioManager) getReactApplicationContext().getSystemService(Context.AUDIO_SERVICE);
 
     res.put("audioJack", false);
@@ -128,18 +122,13 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
           device.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
         ) {
           res.put("bluetooth", true);
-          res.put("deviceName", device.getProductName());
         }
       }
     }
 
     WritableMap map = new WritableNativeMap();
-    for (Map.Entry<String, Object> entry : res.entrySet()) {
-        if (entry.getValue() instanceof Boolean) {
-            map.putBoolean(entry.getKey(), (Boolean) entry.getValue());
-        } else {
-            map.putString(entry.getKey(), (String) entry.getValue());
-        }
+    for (Map.Entry<String, Boolean> entry : res.entrySet()) {
+        map.putBoolean(entry.getKey(), entry.getValue());
     }
     return map;
   }
@@ -152,14 +141,7 @@ public class RNHeadphoneDetectionModule extends ReactContextBaseJavaModule imple
 
   @ReactMethod
   public void isAudioDeviceConnected(final Promise promise) {
-      this.getBluetoothHeadsetName(new Callback() {
-                  @Override
-                  public void invoke(Object... args) {
-                      WritableMap map = isAudioDeviceConnected();
-                      addDeviceName(map, args);
-                      promise.resolve(map);
-                  }
-              });
+      promise.resolve(isAudioDeviceConnected());
   }
 
   @Override
